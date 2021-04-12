@@ -1,0 +1,3 @@
+#!/bin/bash
+sudo mount -a
+echo "The user data script for launch configuration executed successfully"
