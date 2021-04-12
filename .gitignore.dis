@@ -1,0 +1,17 @@
+*
+!/.ec2
+!/.ec2/**
+!/app
+!/app/*/
+!/app/code/**
+!/app/design/**
+!/app/etc/config.php
+!/app/i18n/**
+!/lib
+!/m2-patches
+!/m2-patches/**
+!/.gitignore
+!/.gitlab-ci.yml
+!/.rsyncignore
+!/composer.json
+!/README.md

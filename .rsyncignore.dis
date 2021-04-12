@@ -1,0 +1,9 @@
+/.ec2
+/app/etc
+/pub/static
+/pub/media
+/var
+/generated
+/.git
+/.gitignore
+/.gitlab-ci.yml
