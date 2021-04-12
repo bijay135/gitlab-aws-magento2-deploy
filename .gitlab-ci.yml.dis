@@ -1,0 +1,139 @@
+stages:
+    - build
+    - deploy:ec2
+    - deploy:asg
+    - post-deploy
+    - warm-up
+    
+variables:
+    PRODUCTION_GOLDEN: ssh production_golden
+    PROUDCTION_CRON: ssh production_cron
+    STAGING_GOLDEN: ssh staging_golden
+
+before_script:
+        - $scripts_root/connect-vpn.sh
+
+# Pipeline for production
+build changes production:
+    only:
+        - production
+    tags:
+        - production
+    stage: build
+    script:
+        - $PRODUCTION_GOLDEN "\$scripts_root/build.sh 'production'"
+        
+deploy to golden production:
+    only:
+        - production
+    tags:
+        - production
+    stage: deploy:ec2
+    script:
+        - $PRODUCTION_GOLDEN "\$scripts_root/deploy-golden.sh"
+
+deploy to cron production:
+    only:
+        - production
+    tags:
+        - production
+    stage: deploy:ec2
+    script:
+        - $PROUDCTION_CRON "\$scripts_root/deploy-cron.sh 'production'"
+
+replicate node production:
+    only:
+        - production
+    tags:
+        - production
+    stage: deploy:asg
+    script:
+        - $PRODUCTION_GOLDEN "cat \$scripts_root/application-state" > $scripts_root/as-production
+        - $scripts_root/replicate.sh 'production'
+
+deploy to efs production:
+    only:
+        - production
+    tags:
+        - production
+    stage: deploy:asg
+    script:
+        - $PRODUCTION_GOLDEN "\$scripts_root/deploy-asg.sh 'production'"
+
+finish up deploy production:
+    only:
+        - production
+    tags:
+        - production
+    stage: post-deploy
+    script:
+        - $PRODUCTION_GOLDEN "\$scripts_root/post-deploy.sh 'production'"
+
+warm up pages production:
+    only:
+        - production
+    tags:
+        - production
+    stage: warm-up
+    script:
+        - $PRODUCTION_GOLDEN "\$scripts_root/warm-up.sh 'production'"
+    after_script:
+        - $scripts_root/close-vpn.sh
+
+# Pipeline for staging
+build changes staging:
+    only:
+        - staging
+    tags:
+        - staging
+    stage: build
+    script:
+        - $STAGING_GOLDEN "\$scripts_root/build.sh 'staging'"
+        
+deploy to golden staging:
+    only:
+        - staging
+    tags:
+        - staging
+    stage: deploy:ec2
+    script:
+        - $STAGING_GOLDEN "\$scripts_root/deploy-golden.sh"
+
+replicate node staging:
+    only:
+        - staging
+    tags:
+        - staging
+    stage: deploy:asg
+    script:
+        - $STAGING_GOLDEN "cat \$scripts_root/application-state" > $scripts_root/as-staging
+        - $scripts_root/replicate.sh 'staging'
+
+deploy to efs staging:
+    only:
+        - staging
+    tags:
+        - staging
+    stage: deploy:asg
+    script:
+        - $STAGING_GOLDEN "\$scripts_root/deploy-asg.sh 'staging'"
+
+finish up deploy staging:
+    only:
+        - staging
+    tags:
+        - staging
+    stage: post-deploy
+    script:
+        - $STAGING_GOLDEN "\$scripts_root/post-deploy.sh 'staging'"
+
+warm up pages staging:
+    only:
+        - staging
+    tags:
+        - staging
+    stage: warm-up
+    script:
+        - $STAGING_GOLDEN "\$scripts_root/warm-up.sh 'staging'"
+    after_script:
+        - $scripts_root/close-vpn.sh
