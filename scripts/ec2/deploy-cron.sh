@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Variables
 BRANCH_NAME=$1
+FORCE_ZERO_DOWNTIME=$2
 if [ $BRANCH_NAME == "production" ] ; then
     GOLDEN_HOST="production_golden"
 elif [ $BRANCH_NAME == "staging" ] ; then
@@ -15,7 +16,7 @@ echo "Running cron deploy script"
 cd $mage_root
 
 # Sync fresh artifacts and generated from build
-if [ $APPLICATION_STATE == 1 ] ; then
+if [ $APPLICATION_STATE == 1 ] || [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
 	echo -e "\nApplication state changes found, starting cron deployment"
 	echo "Syncing fresh artifacts from build to current"
 	sudo rsync -a --exclude-from=".rsyncignore" $GOLDEN_HOST:\$build_root/ . --delete

@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Variables
 BRANCH_NAME=$1
+FORCE_ZERO_DOWNTIME=$2
 if [ $BRANCH_NAME == "production" ] ; then
     source $scripts_root/.env.prod
 elif [ $BRANCH_NAME == "staging" ] ; then
@@ -25,7 +26,7 @@ echo "Running post deploy script"
 cd $mage_root
 
 # Upgrade database and flush caches
-if [ $APPLICATION_STATE == 1 ] ; then
+if [ $APPLICATION_STATE == 1 ] || [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
     echo -e "\nApplication state changes found, upgrading database"
     bin/magento setup:upgrade --keep-generated -n
     echo "Flushing caches"

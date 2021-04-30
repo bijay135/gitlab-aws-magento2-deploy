@@ -2,13 +2,14 @@
 set -euo pipefail
 
 # Variables
+FORCE_ZERO_DOWNTIME=$1
 APPLICATION_STATE=$(cat $scripts_root/application-state)
 
 echo "Running golden deploy script"
 cd $mage_root
 
 # Sync fresh artifacts and generated from build
-if [ $APPLICATION_STATE == 1 ] ; then
+if [ $APPLICATION_STATE == 1 ] || [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
 	echo -e "\nApplication state changes found, starting golden deployment"
 	echo "Syncing fresh artifacts from build to current"
 	sudo rsync -a --exclude-from=".rsyncignore" $build_root/ . --delete

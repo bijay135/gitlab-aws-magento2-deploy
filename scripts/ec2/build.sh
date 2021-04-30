@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Variables
 BRANCH_NAME=$1
+FORCE_ZERO_DOWNTIME=$2
 
 echo "Running build script"
 cd $build_root
@@ -19,7 +20,10 @@ git diff --exit-code --quiet origin/$BRANCH_NAME -- composer.json ; COMPOSER=$?
 git diff --exit-code --quiet origin/$BRANCH_NAME -- m2-patches ; PATCHES=$?
 git diff --exit-code --quiet origin/$BRANCH_NAME -- app/code app/design app/etc/config.php ; APP=$?
 set -eo pipefail
-if [ $COMPOSER == 1 ] || [ $PATCHES == 1 ] || [ $APP == 1 ] ; then
+if [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
+    APPLICATION_STATE=0
+    echo "0" > $scripts_root/application-state
+elif [ $COMPOSER == 1 ] || [ $PATCHES == 1 ] || [ $APP == 1 ] ; then
     APPLICATION_STATE=1
     echo "1" > $scripts_root/application-state
 else
@@ -132,10 +136,15 @@ else
 fi
 
 # Build application changes
-if [ $APPLICATION_STATE == 1 ] ; then
+if [ $APPLICATION_STATE == 1 ] || [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
     echo -e "\nApplication state changes found, starting application build"
-    echo "Clearing build generated, static and view_preprocessed"
-    rm -rf generated/* && rm -rf pub/static/* && rm -rf var/view_preprocessed/*
+    if [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
+        echo "Clearing build generated"
+        rm -rf generated/*
+    else
+        echo "Clearing build generated, static and view_preprocessed"
+        rm -rf generated/* && rm -rf pub/static/* && rm -rf var/view_preprocessed/*
+    fi
     echo "Reconciling modules with shared config"
     if ! ls -l app/etc/ | grep -q "config.php.bk" ; then
         cp -af app/etc/config.php app/etc/config.php.bk
@@ -154,9 +163,11 @@ if [ $APPLICATION_STATE == 1 ] ; then
     echo "Compiling code"
     bin/magento setup:di:compile -q
     echo "Code Compliation complete"
-    echo "Deploying static content"
-    bin/magento setup:static-content:deploy -f -j 4 -q
-    echo "Static content deployment complete"
+    if [ $FORCE_ZERO_DOWNTIME != 1 ] ; then
+        echo "Deploying static content"
+        bin/magento setup:static-content:deploy -f -j 4 -q
+        echo "Static content deployment complete"
+    fi
     echo "Application build complete"
 else
     echo -e "\nNo application state changes found, skipping app build"
