@@ -4,14 +4,15 @@ stages:
     - deploy:asg
     - post-deploy
     - warm-up
-    
+
 variables:
     PRODUCTION_GOLDEN: ssh production_golden
     PROUDCTION_CRON: ssh production_cron
     STAGING_GOLDEN: ssh staging_golden
+    FORCE_ZERO_DOWNTIME: 0
 
 before_script:
-        - $scripts_root/connect-vpn.sh
+    - $scripts_root/connect-vpn.sh
 
 # Pipeline for production
 build changes production:
@@ -21,8 +22,8 @@ build changes production:
         - production
     stage: build
     script:
-        - $PRODUCTION_GOLDEN "\$scripts_root/build.sh 'production'"
-        
+        - $PRODUCTION_GOLDEN "\$scripts_root/build.sh 'production' $FORCE_ZERO_DOWNTIME"
+
 deploy to golden production:
     only:
         - production
@@ -30,7 +31,7 @@ deploy to golden production:
         - production
     stage: deploy:ec2
     script:
-        - $PRODUCTION_GOLDEN "\$scripts_root/deploy-golden.sh"
+        - $PRODUCTION_GOLDEN "\$scripts_root/deploy-golden.sh $FORCE_ZERO_DOWNTIME"
 
 deploy to cron production:
     only:
@@ -39,7 +40,7 @@ deploy to cron production:
         - production
     stage: deploy:ec2
     script:
-        - $PROUDCTION_CRON "\$scripts_root/deploy-cron.sh 'production'"
+        - $PROUDCTION_CRON "\$scripts_root/deploy-cron.sh 'production' $FORCE_ZERO_DOWNTIME"
 
 replicate node production:
     only:
@@ -67,7 +68,7 @@ finish up deploy production:
         - production
     stage: post-deploy
     script:
-        - $PRODUCTION_GOLDEN "\$scripts_root/post-deploy.sh 'production'"
+        - $PRODUCTION_GOLDEN "\$scripts_root/post-deploy.sh 'production' $FORCE_ZERO_DOWNTIME"
 
 warm up pages production:
     only:
@@ -88,8 +89,8 @@ build changes staging:
         - staging
     stage: build
     script:
-        - $STAGING_GOLDEN "\$scripts_root/build.sh 'staging'"
-        
+        - $STAGING_GOLDEN "\$scripts_root/build.sh 'staging' $FORCE_ZERO_DOWNTIME"
+
 deploy to golden staging:
     only:
         - staging
@@ -97,7 +98,7 @@ deploy to golden staging:
         - staging
     stage: deploy:ec2
     script:
-        - $STAGING_GOLDEN "\$scripts_root/deploy-golden.sh"
+        - $STAGING_GOLDEN "\$scripts_root/deploy-golden.sh $FORCE_ZERO_DOWNTIME"
 
 replicate node staging:
     only:
@@ -125,7 +126,7 @@ finish up deploy staging:
         - staging
     stage: post-deploy
     script:
-        - $STAGING_GOLDEN "\$scripts_root/post-deploy.sh 'staging'"
+        - $STAGING_GOLDEN "\$scripts_root/post-deploy.sh 'staging' $FORCE_ZERO_DOWNTIME"
 
 warm up pages staging:
     only:
