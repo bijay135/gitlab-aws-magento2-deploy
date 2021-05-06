@@ -33,15 +33,17 @@ fi
 
 # Prepare deploy summary
 echo -e "\n###################### Deployment Summary ######################"
-echo "####################### Server Section #########################"
-echo -e "# \t\t\t nginx     => $NGINX \t\t\t #"
-echo -e "# \t\t\t php       => $PHP \t\t\t #"
-echo -e "# \t\t\t logrotate => $LOGROTATE \t\t\t #"
-echo -e "# \t\t\t magento   => $MAGENTO \t\t\t #"
-echo "##################### Application Section ######################"
-echo -e "# \t\t\t Composer  => $COMPOSER \t\t\t #"
-echo -e "# \t\t\t Patches   => $PATCHES \t\t\t #"
-echo -e "# \t\t\t App       => $APP \t\t\t #"
+echo "|---------------------- Pipeline Section ----------------------|"
+echo -e "| \t\t Force Zero Downtime    =>    $FORCE_ZERO_DOWNTIME \t\t |"
+echo "|---------------------- Server Section ------------------------|"
+echo -e "| \t\t Nginx                  =>    $NGINX \t\t |"
+echo -e "| \t\t Php                    =>    $PHP \t\t |"
+echo -e "| \t\t Logrotate              =>    $LOGROTATE \t\t |"
+echo -e "| \t\t Magento                =>    $MAGENTO \t\t |"
+echo "|-------------------- Application Section ---------------------|"
+echo -e "| \t\t Composer               =>    $COMPOSER \t\t |"
+echo -e "| \t\t Patches                =>    $PATCHES \t\t |"
+echo -e "| \t\t App                    =>    $APP \t\t |"
 echo "################################################################"
 
 # Pull latest changes
