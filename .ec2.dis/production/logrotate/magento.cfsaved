@@ -1,0 +1,9 @@
+/var/www/html/$domain_name/var/log/*.log {
+	su root www-data
+	daily
+	missingok
+	notifempty
+	compress
+	copytruncate
+	rotate 90
+}
