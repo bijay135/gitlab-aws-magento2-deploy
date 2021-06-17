@@ -30,12 +30,12 @@ fi
 if [ $APPLICATION_STATE == 1 ] ; then
     echo -e "\nApplication state changes found, starting asg deployment"
     echo "Clearing current static and view_preprocessed"
-    until find pub/static/*/*/* var/view_preprocessed/*/*/* -maxdepth 0 | parallel -j 0 rm -rf {} ; do
+    until find pub/static var/view_preprocessed -mindepth 3 -maxdepth 3 ! -path "*/_cache/*" | parallel -j 0 rm -rf {} ; do
         echo "Could not clear static or view_preprocessed, trying again"
     done
     rm -rf pub/static/* && rm -rf var/view_preprocessed/*
     echo "Syncing fresh static and view_preprocessed from build to current"
-    find $build_root/./pub/static/*/*/* $build_root/./var/view_preprocessed/*/*/* -maxdepth 0 | parallel -j 0 sudo rsync -aR {} .
+    find $build_root/./pub/static $build_root/./var/view_preprocessed -mindepth 3 -maxdepth 3 | parallel -j 0 sudo rsync -aR {} .
     cp -af $build_root/pub/static/deployed_version.txt pub/static/
     echo "Fresh static and view_preprocessed sync complete"
     echo "Asg deployment complete"
