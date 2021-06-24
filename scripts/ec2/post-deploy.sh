@@ -3,7 +3,6 @@ set -euo pipefail
 
 # Variables
 BRANCH_NAME=$1
-FORCE_ZERO_DOWNTIME=$2
 if [ $BRANCH_NAME == "production" ] ; then
     source $scripts_root/.env.prod
 elif [ $BRANCH_NAME == "staging" ] ; then
@@ -26,7 +25,7 @@ echo "Running post deploy script"
 cd $mage_root
 
 # Upgrade database and flush caches
-if [ $APPLICATION_STATE == 1 ] || [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
+if [ $APPLICATION_STATE == 1 ] ; then
     echo -e "\nApplication state changes found, upgrading database"
     bin/magento setup:upgrade --keep-generated -n
     echo "Flushing caches"
@@ -42,18 +41,5 @@ while [ $(instanceRefreshStatus) != 1 ] ; do
     sleep 15
 done
 echo "Instance refresh finished successfully"
-
-# Disable maintenane mode and revert health check configuration to original
-if bin/magento maintenance:status | grep -q "is active" ; then
-    echo -e "\nDisabling maintenance mode"
-    bin/magento maintenance:disable
-    echo "Reverting unhealthy threshold and health check interval"
-    REVERT_HEALTH_CHECK=$(aws elbv2 modify-target-group --target-group-arn $TARGET_GROUP_ARN --unhealthy-threshold-count \
-        $ORIGINAL_UNHEALTHY_THRESHOLD --health-check-interval-seconds $ORIGINAL_HEALTH_CHECK_INTERVAL \
-        --query 'TargetGroups[0].TargetGroupName')
-    echo "Reverted health check configuration for $REVERT_HEALTH_CHECK"
-else
-    echo -e "\nMaintenance mode is not active, skipping"
-fi
 
 echo -e "\nPost deploy script complete"

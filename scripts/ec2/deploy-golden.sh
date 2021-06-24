@@ -2,14 +2,13 @@
 set -euo pipefail
 
 # Variables
-FORCE_ZERO_DOWNTIME=$1
 APPLICATION_STATE=$(cat $scripts_root/application-state)
 
 echo "Running golden deploy script"
 cd $mage_root
 
-# Sync fresh artifacts and generated from build
-if [ $APPLICATION_STATE == 1 ] || [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
+# Sync fresh artifacts, generated, static and view_preprocessed from build
+if [ $APPLICATION_STATE == 1 ] ; then
 	echo -e "\nApplication state changes found, starting golden deployment"
 	echo "Syncing fresh artifacts from build to current"
 	sudo rsync -a --exclude-from=".rsyncignore" $build_root/ . --delete
@@ -19,9 +18,14 @@ if [ $APPLICATION_STATE == 1 ] || [ $FORCE_ZERO_DOWNTIME == 1 ] ; then
 	until rm -rf generated/* ; do
 	    echo "Could not clear generated, trying again"
 	done
+	echo "Clearing current static and view_preprocessed"
+    rm -rf pub/static/* var/view_preprocessed/*
 	echo "Syncing fresh generated from build to current"
 	sudo rsync -a $build_root/generated/* generated/
 	echo "Fresh generated sync complete"
+	echo "Syncing fresh static and view_preprocessed from build to current"
+	sudo rsync -aR $build_root/./pub/static/* $build_root/./symlinks/view_preprocessed/* .
+	echo "Fresh static and view_preprocessed sync complete"
 	echo "Golden deployment complete"
 else
 	echo -e "\nNo application state changes found, skipping golden deployment"
