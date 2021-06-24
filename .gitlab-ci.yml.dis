@@ -48,7 +48,6 @@ replicate node production:
         - production
     stage: deploy:asg
     script:
-        - $PRODUCTION_GOLDEN "cat \$scripts_root/application-state" > $scripts_root/as-production
         - $scripts_root/replicate.sh 'production'
 
 finish up deploy production:
@@ -97,7 +96,6 @@ replicate node staging:
         - staging
     stage: deploy:asg
     script:
-        - $STAGING_GOLDEN "cat \$scripts_root/application-state" > $scripts_root/as-staging
         - $scripts_root/replicate.sh 'staging'
 
 finish up deploy staging:

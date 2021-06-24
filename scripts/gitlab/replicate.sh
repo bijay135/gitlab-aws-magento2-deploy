@@ -5,10 +5,8 @@ set -euo pipefail
 BRANCH_NAME=$1
 if [ $BRANCH_NAME == "production" ] ; then
     source $scripts_root/.env.prod
-    APPLICATION_STATE=$(cat $scripts_root/as-production)
 elif [ $BRANCH_NAME == "staging" ] ; then
     source $scripts_root/.env.stag
-    APPLICATION_STATE=$(cat $scripts_root/as-staging)
 fi
 
 echo "Running replication script"
@@ -36,14 +34,8 @@ aws ec2 wait image-available --image-ids $IMAGE_ID
 echo "The image $IMAGE_ID is now available and another deployment is set for execution"
 
 # Start instance refresh
-if [ $APPLICATION_STATE == 1 ] ; then
-    echo -e "\nApplication state changes found, starting quick instance refresh"
-    aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME \
-    --preferences '{"MinHealthyPercentage": 0, "InstanceWarmup": 60}'
-else
-    echo -e "\nNo application state changes found, starting rolling insance refresh"
-    aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME \
-    --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 60}'
-fi
+echo -e "Starting instance refresh"
+aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME \
+    --preferences '{"MinHealthyPercentage": 100, "InstanceWarmup": 60}'
 
 echo -e "\nReplication script complete"
