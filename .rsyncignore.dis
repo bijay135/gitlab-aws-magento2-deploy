@@ -4,6 +4,7 @@
 /pub/media
 /var
 /generated
+/symlinks
 /.git
 /.gitignore
 /.gitlab-ci.yml

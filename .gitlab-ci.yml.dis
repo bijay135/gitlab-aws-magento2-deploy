@@ -9,7 +9,6 @@ variables:
     PRODUCTION_GOLDEN: ssh production_golden
     PROUDCTION_CRON: ssh production_cron
     STAGING_GOLDEN: ssh staging_golden
-    FORCE_ZERO_DOWNTIME: 0
 
 before_script:
     - $scripts_root/connect-vpn.sh
@@ -22,7 +21,7 @@ build changes production:
         - production
     stage: build
     script:
-        - $PRODUCTION_GOLDEN "\$scripts_root/build.sh 'production' $FORCE_ZERO_DOWNTIME"
+        - $PRODUCTION_GOLDEN "\$scripts_root/build.sh 'production'"
 
 deploy to golden production:
     only:
@@ -31,7 +30,7 @@ deploy to golden production:
         - production
     stage: deploy:ec2
     script:
-        - $PRODUCTION_GOLDEN "\$scripts_root/deploy-golden.sh $FORCE_ZERO_DOWNTIME"
+        - $PRODUCTION_GOLDEN "\$scripts_root/deploy-golden.sh"
 
 deploy to cron production:
     only:
@@ -40,7 +39,7 @@ deploy to cron production:
         - production
     stage: deploy:ec2
     script:
-        - $PROUDCTION_CRON "\$scripts_root/deploy-cron.sh 'production' $FORCE_ZERO_DOWNTIME"
+        - $PROUDCTION_CRON "\$scripts_root/deploy-cron.sh 'production'"
 
 replicate node production:
     only:
@@ -52,15 +51,6 @@ replicate node production:
         - $PRODUCTION_GOLDEN "cat \$scripts_root/application-state" > $scripts_root/as-production
         - $scripts_root/replicate.sh 'production'
 
-deploy to efs production:
-    only:
-        - production
-    tags:
-        - production
-    stage: deploy:asg
-    script:
-        - $PRODUCTION_GOLDEN "\$scripts_root/deploy-asg.sh 'production'"
-
 finish up deploy production:
     only:
         - production
@@ -68,7 +58,7 @@ finish up deploy production:
         - production
     stage: post-deploy
     script:
-        - $PRODUCTION_GOLDEN "\$scripts_root/post-deploy.sh 'production' $FORCE_ZERO_DOWNTIME"
+        - $PRODUCTION_GOLDEN "\$scripts_root/post-deploy.sh 'production'"
 
 warm up pages production:
     only:
@@ -89,7 +79,7 @@ build changes staging:
         - staging
     stage: build
     script:
-        - $STAGING_GOLDEN "\$scripts_root/build.sh 'staging' $FORCE_ZERO_DOWNTIME"
+        - $STAGING_GOLDEN "\$scripts_root/build.sh 'staging'"
 
 deploy to golden staging:
     only:
@@ -98,7 +88,7 @@ deploy to golden staging:
         - staging
     stage: deploy:ec2
     script:
-        - $STAGING_GOLDEN "\$scripts_root/deploy-golden.sh $FORCE_ZERO_DOWNTIME"
+        - $STAGING_GOLDEN "\$scripts_root/deploy-golden.sh"
 
 replicate node staging:
     only:
@@ -110,15 +100,6 @@ replicate node staging:
         - $STAGING_GOLDEN "cat \$scripts_root/application-state" > $scripts_root/as-staging
         - $scripts_root/replicate.sh 'staging'
 
-deploy to efs staging:
-    only:
-        - staging
-    tags:
-        - staging
-    stage: deploy:asg
-    script:
-        - $STAGING_GOLDEN "\$scripts_root/deploy-asg.sh 'staging'"
-
 finish up deploy staging:
     only:
         - staging
@@ -126,7 +107,7 @@ finish up deploy staging:
         - staging
     stage: post-deploy
     script:
-        - $STAGING_GOLDEN "\$scripts_root/post-deploy.sh 'staging' $FORCE_ZERO_DOWNTIME"
+        - $STAGING_GOLDEN "\$scripts_root/post-deploy.sh 'staging'"
 
 warm up pages staging:
     only:
