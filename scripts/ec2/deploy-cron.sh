@@ -19,6 +19,7 @@ if [ $APPLICATION_STATE == 1 ] ; then
 	echo -e "\nApplication state changes found, starting cron deployment"
 	echo "Syncing fresh artifacts from build to current"
 	sudo rsync -a --exclude-from=".rsyncignore" $GOLDEN_HOST:\$build_root/ . --delete
+	sudo rsync -a $GOLDEN_HOST:\$build_root/app/etc/config.php app/etc/
 	echo "Fresh artifacts sync complete"
 	echo "Clearing current generated"
 	until rm -rf generated/* ; do
