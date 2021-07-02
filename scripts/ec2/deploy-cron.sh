@@ -19,14 +19,15 @@ if [ $APPLICATION_STATE == 1 ] ; then
 	echo -e "\nApplication state changes found, starting cron deployment"
 	echo "Syncing fresh artifacts from build to current"
 	sudo rsync -a --exclude-from=".rsyncignore" $GOLDEN_HOST:\$build_root/ . --delete
-	sudo rsync -a $GOLDEN_HOST:\$build_root/app/etc/config.php app/etc/
+	sudo rsync -a $GOLDEN_HOST:\$build_root/app/etc/config.php.mod $GOLDEN_HOST:\$mage_root/app/etc/env.php app/etc/
+	mv -f app/etc/config.php.mod app/etc/config.php
 	echo "Fresh artifacts sync complete"
 	echo "Clearing current generated"
 	until rm -rf generated/* ; do
 	    echo "Could not clear generated, trying again"
 	done
 	echo "Clearing current static and view_preprocessed"
-    rm -rf pub/static/* var/view_preprocessed/*
+    find pub/static/* var/view_preprocessed/* -maxdepth 0 ! -name "_cache" -exec rm -rf {} \+
 	echo "Syncing fresh generated from build to current"
 	sudo rsync -a $GOLDEN_HOST:\$build_root/generated/* generated/
 	echo "Fresh generated sync complete"

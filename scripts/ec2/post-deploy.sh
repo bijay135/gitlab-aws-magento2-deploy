@@ -24,22 +24,24 @@ instanceRefreshStatus(){
 echo "Running post deploy script"
 cd $mage_root
 
-# Upgrade database and flush caches
+# Upgrade database
 if [ $APPLICATION_STATE == 1 ] ; then
     echo -e "\nApplication state changes found, upgrading database"
     bin/magento setup:upgrade --keep-generated -n
-    echo "Flushing caches"
-    bin/magento cache:flush -q
-    echo "Caches flushed"
 else
 	echo -e "\nNo Application state changes found, skipping database upgrade"
 fi
 
-# Wait for instance refresh to fully finish
+# Wait for instance refresh to fully finish, clear static cache and flush caches
 echo -e "\nWaiting for instance refresh to finish .."
 while [ $(instanceRefreshStatus) != 1 ] ; do
     sleep 15
 done
+echo "Clearing static cache"
+rm -rf pub/static/_cache/*
 echo "Instance refresh finished successfully"
+echo "Flushing caches"
+bin/magento cache:flush -q
+echo "Caches flushed"
 
 echo -e "\nPost deploy script complete"
