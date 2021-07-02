@@ -150,7 +150,6 @@ if [ $APPLICATION_STATE == 1 ] ; then
         bin/magento module:disable -q $DISABLED_MODULES
     fi
     cp -af app/etc/config.php app/etc/config.php.mod
-    cp -af app/etc/config.php.bk app/etc/config.php && rm -f app/etc/config.php.bk
     echo "Modules reconcilation complete"
     echo "Compiling code"
     bin/magento setup:di:compile -q
@@ -158,6 +157,7 @@ if [ $APPLICATION_STATE == 1 ] ; then
     echo "Deploying static content"
     bin/magento setup:static-content:deploy -f -j 4 -q
     echo "Static content deployment complete"
+    cp -af app/etc/config.php.bk app/etc/config.php && rm -f app/etc/config.php.bk
     echo "Application build complete"
 else
     echo -e "\nNo application state changes found, skipping app build"
