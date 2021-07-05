@@ -32,16 +32,24 @@ else
 	echo -e "\nNo Application state changes found, skipping database upgrade"
 fi
 
-# Wait for instance refresh to fully finish, clear static cache and flush caches
+# Wait for instance refresh to fully finish
 echo -e "\nWaiting for instance refresh to finish .."
 while [ $(instanceRefreshStatus) != 1 ] ; do
     sleep 15
 done
-echo "Clearing static cache"
-rm -rf pub/static/_cache/*
 echo "Instance refresh finished successfully"
-echo "Flushing caches"
-bin/magento cache:flush -q
-echo "Caches flushed"
+
+# Refresh caches
+if [ $APPLICATION_STATE == 1 ] ; then
+    echo -e "\nApplication state changes found, refreshing caches"
+    echo "Clearing static cache"
+    rm -rf pub/static/_cache/*
+    echo "Flushing cache"
+    bin/magento cache:flush -q
+    echo "Cache flushed"
+else
+    echo -e "\nNo Application state changes found, skipping caches refresh"
+fi
+
 
 echo -e "\nPost deploy script complete"
