@@ -36,6 +36,6 @@ echo "The image $IMAGE_ID is now available and another deployment is set for exe
 # Start instance refresh
 echo -e "Starting instance refresh"
 aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME \
-    --preferences '{"MinHealthyPercentage": 100, "InstanceWarmup": 60}'
+    --preferences '{"MinHealthyPercentage": 10, "InstanceWarmup": 30}'
 
 echo -e "\nReplication script complete"
