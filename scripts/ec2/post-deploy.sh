@@ -47,6 +47,7 @@ if [ $APPLICATION_STATE == 1 ] ; then
     echo "Flushing cache"
     bin/magento cache:flush -q
     echo "Cache flushed"
+    echo "Caches refresh complete"
 else
     echo -e "\nNo Application state changes found, skipping caches refresh"
 fi

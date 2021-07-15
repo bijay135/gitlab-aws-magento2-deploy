@@ -12,8 +12,7 @@ if [ $APPLICATION_STATE == 1 ] ; then
 	echo -e "\nApplication state changes found, starting golden deployment"
 	echo "Syncing fresh artifacts from build to current"
 	sudo rsync -a --exclude-from=".rsyncignore" $build_root/ . --delete
-	sudo rsync -a $build_root/app/etc/config.php.mod app/etc/
-	mv -f app/etc/config.php.mod app/etc/config.php
+	sudo rsync -a $build_root/app/etc/config.php.mod app/etc/config.php
 	echo "Fresh artifacts sync complete"
 	echo "Clearing current generated"
 	until rm -rf generated/* ; do
