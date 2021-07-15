@@ -3,6 +3,12 @@ set -euo pipefail
 
 # Variables
 BRANCH_NAME=$1
+if [ -f "$scripts_root/cache-state" ] ; then
+    CACHE_STATE=$(cat $scripts_root/cache-state)
+else
+    CACHE_STATE=a
+    echo "a" > $scripts_root/cache-state
+fi
 
 echo "Running build script"
 cd $build_root
@@ -73,6 +79,13 @@ if [ $NGINX == 1 ] || [ $PHP == 1 ] || [ $LOGROTATE == 1 ] || [ $MAGENTO == 1 ] 
     if [ $MAGENTO == 1 ] ; then
         echo "Magento changes found, updating"
     	cp -f .ec2/$BRANCH_NAME/magento/* $mage_root/app/etc/
+        echo "Restoring current cache databases"
+        if [ $CACHE_STATE == a ] ; then
+            $mage_root/bin/magento setup:config:set --cache-backend-redis-db=1 --page-cache-redis-db=2 -n -q
+        elif [ $CACHE_STATE == b ]; then
+            $mage_root/bin/magento setup:config:set --cache-backend-redis-db=3 --page-cache-redis-db=4 -n -q
+        fi
+        echo "Current cache databases restored"
         echo "Magento update complete"
     fi
     echo "Server build complete"
@@ -158,6 +171,13 @@ if [ $APPLICATION_STATE == 1 ] ; then
     bin/magento setup:static-content:deploy -f -j 4 -q
     echo "Static content deployment complete"
     cp -af app/etc/config.php.bk app/etc/config.php && rm -f app/etc/config.php.bk
+    echo "Switching to alternate cache databases"
+    if [ $CACHE_STATE == a ] ; then
+        $mage_root/bin/magento setup:config:set --cache-backend-redis-db=3 --page-cache-redis-db=4 -n -q
+    elif [ $CACHE_STATE == b ]; then
+        $mage_root/bin/magento setup:config:set --cache-backend-redis-db=1 --page-cache-redis-db=2 -n -q
+    fi
+    echo "Alternate cache databases switched"
     echo "Application build complete"
 else
     echo -e "\nNo application state changes found, skipping app build"
