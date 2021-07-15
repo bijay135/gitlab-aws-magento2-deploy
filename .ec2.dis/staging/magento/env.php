@@ -89,7 +89,7 @@ return [
                     'port' => '6379',
                     'database' => '1'
                 ],
-                'id_prefix' => '37c_'
+                'id_prefix' => '$cache_prefix'
             ],
             'page_cache' => [
                 'backend' => 'Cm_Cache_Backend_Redis',
@@ -99,9 +99,10 @@ return [
                     'database' => '2',
                     'compress_data' => '0'
                 ],
-                'id_prefix' => '37c_'
+                'id_prefix' => '$cache_prefix'
             ]
-        ]
+        ],
+        'allow_parallel_generation' => false
     ],
     'lock' => [
         'provider' => 'file',
@@ -132,7 +133,7 @@ return [
         '$domain_name'
     ],
     'install' => [
-        'date' => 'Wed, 04 Nov 2020 09:13:01 +0000'
+        'date' => '$install_date'
     ],
     'system' => [
         'default' => [
