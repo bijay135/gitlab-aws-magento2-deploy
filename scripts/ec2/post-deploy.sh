@@ -45,21 +45,23 @@ if [ $APPLICATION_STATE == 1 ] ; then
     echo -e "\nApplication state changes found, refreshing caches"
     echo "Clearing static cache"
     rm -rf pub/static/_cache/*
-    echo "Flushing legacy cache databases and setting alternate to active"
+    echo "Flushing legacy cache databases and setting alternate as active"
     if [ $CACHE_STATE == a ] ; then
         while redis-cli -h $aws_redis info keyspace | grep -q "db1" ; do
             redis-cli -h $aws_redis -n 1 flushdb > /dev/null
+            sleep 1
         done
         redis-cli -h $aws_redis -n 2 flushdb > /dev/null
         echo "b" > $scripts_root/cache-state
     elif [ $CACHE_STATE == b ]; then
         while redis-cli -h $aws_redis info keyspace | grep -q "db3" ; do
-             redis-cli -h $aws_redis -n 3 flushdb > /dev/null
+            redis-cli -h $aws_redis -n 3 flushdb > /dev/null
+            sleep 1
         done
         redis-cli -h $aws_redis -n 4 flushdb > /dev/null
         echo "a" > $scripts_root/cache-state
     fi
-    echo "Legacy cache databases flushed and alternate set to active"
+    echo "Legacy cache databases flushed and alternate set as active"
     echo "Caches refresh complete"
 else
     echo -e "\nNo Application state changes found, skipping caches refresh"
