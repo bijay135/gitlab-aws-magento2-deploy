@@ -1,13 +1,27 @@
 # Gitlab CI/CD pipeline with aws integration for magento 2 deployment
 
-# Contents Overview
+# Feature highlights
+- Emphasis on zero downtime during deployment
+- Simple deploy summary for server/application section in tabular format during each deployment
+- Support to sync nginx, php, logrotate and magento env changes directly from repository to golden server
+- Seperate root to build application changes and state checking flow to skip application build when no changes
+- Alternating `default` and `full page` cache databases to reduce conflics between old and new nodes
+- Aws cli integration to create image, update launch configuration and start/wait for instance refresh
+
+# Important configuration information
+- Part of static `pub/static` on efs causes massively slow static deployment so it should not been kept on efs
+- Part of static `var/view_preprocessed` will be on efs due to entire `var` being efs, so custom configuration will be done later on to remedy massively slow static deployment
+- Part of static `pub/static/_cache` should for now be in efs as it generates only on demand and not sharing it breaks layout
+  [static cache bug](https://github.com/magento/magento2/issues/13225)
+
+# Contents overview
 1. [Project sequence diagram](#1-project-sequence-diagram)
 2. [Pre-Requistices](#2-pre-requistics)
 3. [Configure repository and user for deployment](#3-configure-repository-and-user-for-deployment)
 4. [Configure gitlab server](#4-configure-gitlab-server)
 5. [Configure golden server](#5-configure-golden-server)
 6. [Configure cron server](#6-configure-cron-server)
-7. [General usage of pipeline](#7-general-usage-of-pipeline)
+7. [Usage of pipeline and extra information](#7-usage-of-pipeline-and-extra-information)
 
 # 1. Project sequence diagram
 ![Deployment Pipeline](deployment-pipeline.png)
@@ -15,7 +29,7 @@
 # 2. Pre-Requistics
 - Proper credentals/vpn to ssh into staging/production ec2 servers
 - Magento 2 existing project installed and running on staging/production ec2 server
-- These folders mounted on efs `app/etc`, `var`, `pub/media`, `pub/static` in ec2 server mage root
+- These folders mounted on efs `var` and `pub/media` in ec2 server mage root
 - All services endpoint accessible from staging/production ec2 server
 - Proper credentals to ssh into gitlab hosted server
 - Gitlab installed/running, magento repository configured in gitlab and two gitlab shell runner configured
@@ -119,7 +133,7 @@ cp -a .env.dis .env.stag
 - Redo these steps for each golden server `production` and `staging`
 - Install some dependencies
 ```
-sudo apt-get install parallel
+sudo apt-get install redis-tools
 ```
 - Follow steps below to configure [mage/build root and ssh](#configure-magebuild-root-and-ssh) and [this repository](#configure-this-repository-for-golden)
 
@@ -135,15 +149,50 @@ Host $gitlab_domain
 - Create a new folder in `/var/www/html` as `build` and copy over `.git` and `.gitignore` from mage root
 - Run `composer install` in `build` folder to install all packages, make sure `config.php` is also present in `app/etc` if not already
 - Magento build operations can be done without any services connection so `env.php` is not required in `app/etc`
+- Create a symbolic link for `view_preprocessed` outside `var` to non-efs folder in `build` folder
+```
+rm -rf var/view_preprocessed
+mkdir -p symlinks/view_preprocessed
+cd var && ln -snf ../symlinks/view_preprocessed .
+```
+- Modify `pub/index.php` section to use custom `view_preprocessed` as follows
+```
+$tmpMaterializationDir = dirname(__DIR__, 1).'/symlinks/view_preprocessed/pub/static';
+$params = $_SERVER;
+$params[Bootstrap::INIT_PARAM_FILESYSTEM_DIR_PATHS] = array_replace_recursive(
+    $params[Bootstrap::INIT_PARAM_FILESYSTEM_DIR_PATHS] ?? [],
+    [
+        DirectoryList::PUB => [DirectoryList::URL_PATH => ''],
+        DirectoryList::MEDIA => [DirectoryList::URL_PATH => 'media'],
+        DirectoryList::STATIC_VIEW => [DirectoryList::URL_PATH => 'static'],
+        DirectoryList::UPLOAD => [DirectoryList::URL_PATH => 'media/upload'],
+        DirectoryList::TMP_MATERIALIZATION_DIR => [DirectoryList::PATH => $tmpMaterializationDir]
+    ]
+);
+
+```
 - Remove these files from current `mage root`, they can be left undeleted but serves no purpose in this pipeline from `mage root`
 ```
 rm -r .ec2 .git .gitignore .gitlab-ci.yml
 ```
+- Rsync your `build root` changes to `mage root`
+```
+sudo rsync -a --exclude-from=".rsyncignore" $build_root/ . --delete
+```
+- Since `var` and `symlinks` is skipped for rsync, create a symbolic link for `view_preprocessed` outside `var` to non-efs folder in `mage root` as well
+```
+rm -rf var/view_preprocessed
+mkdir -p symlinks/view_preprocessed
+cd var && ln -snf ../symlinks/view_preprocessed .
+```
 
 ## Configure this repository for golden
 - Clone this repositrory in home folder of user
-- Add some variables in `/etc/environment` for pipeline commands alias, replace `$domain_name` with your project domain name
+- Add some variables in `/etc/environment` for pipeline commands alias, replace `$redis_host` with redis host and `$domain_name` with your project domain name
 ```
+# Aws Endpoints
+aws_redis="$redis_host"
+
 # Root path
 mage_root="/var/www/html/$domain_name"
 build_root="/var/www/html/build"
@@ -179,6 +228,12 @@ ssh $ssh_alias_name
 ```
 sudo rsync -a --exclude-from=".rsyncignore" $GOLDEN_HOST:\$mage_root/ . --delete
 ```
+- Since `var` and `symlinks` is skipped for rsync, create a symbolic link for `view_preprocessed` outside `var` to non-efs folder in `mage root` as well
+```
+rm -rf var/view_preprocessed
+mkdir -p symlinks/view_preprocessed
+cd var && ln -snf ../symlinks/view_preprocessed .
+```
 
 ## Configure this repository for cron
 - Clone this repository in home folder of user
@@ -195,11 +250,9 @@ cp -a .env.dis .env.stag
 ```
 - Edit each of the `.env` file and add `production` or `staging` aws/magento related details
 
-# 7. General usage of pipeline
+# 7. Usage of pipeline and extra information
 - After setting up everything from previous steps, make some changes in previous already existing repository, commit and push changes
 - Clone the new repository for cloud in seperate isolated folder and pull changes of previous repository in one of the branches preferably `staging`
 - Push the changes to relevant branch, the pipeline should trigger, run it's operations and complete if everything was setup up properly
-- To force zero downtime deployment, which will skip maintenance mode, skip static build/deployment and use rolling replication use this command
-```
-git push origin $branch_name -o ci.variable="FORCE_ZERO_DOWNTIME=1"
-```
+- Symbolic linked `view_preprocessed` in `var` will be used by `static deployment` command while modified `view_preprocessed` in `pub/index.php` will be used by `nginx`
+- Admin configuration `Enable Symlinks` does not need to be enabled, it's only needed for read operations while write operations can be done safetly with this disabled
