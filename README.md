@@ -5,7 +5,6 @@
 - Simple deploy summary for server/application section in tabular format during each deployment
 - Support to sync nginx, php, logrotate and magento env changes directly from repository to golden server
 - Seperate root to build application changes and state checking flow to skip application build when no changes
-- Alternating `default` and `full page` cache databases to reduce conflics between old and new nodes
 - Aws cli integration to create image, update launch configuration and start/wait for instance refresh
 
 # Important configuration information
@@ -29,7 +28,7 @@
 # 2. Pre-Requistics
 - Proper credentals/vpn to ssh into staging/production ec2 servers
 - Magento 2 existing project installed and running on staging/production ec2 server
-- These folders mounted on efs `var` and `pub/media` in ec2 server mage root
+- These folders mounted on efs `app/etc`, `var` and `pub/media` in ec2 server mage root
 - All services endpoint accessible from staging/production ec2 server
 - Proper credentals to ssh into gitlab hosted server
 - Gitlab installed/running, magento repository configured in gitlab and two gitlab shell runner configured
@@ -131,10 +130,6 @@ cp -a .env.dis .env.stag
 
 # 5. Configure golden server
 - Redo these steps for each golden server `production` and `staging`
-- Install some dependencies
-```
-sudo apt-get install redis-tools
-```
 - Follow steps below to configure [mage/build root and ssh](#configure-magebuild-root-and-ssh) and [this repository](#configure-this-repository-for-golden)
 
 ## Configure mage/build root and ssh
@@ -143,7 +138,7 @@ sudo apt-get install redis-tools
 ```
 Host $gitlab_domain
    HostName $host_ip
-   IdentityFile ~/.ssh/gitlab
+   IdentityFile ~/.ssh/gitlab.pem
 ```
 - Cd into your current `mage root` and change the git remote to ssh one instead of https, now all git commands should work through ssh
 - Create a new folder in `/var/www/html` as `build` and copy over `.git` and `.gitignore` from mage root
@@ -188,11 +183,8 @@ cd var && ln -snf ../symlinks/view_preprocessed .
 
 ## Configure this repository for golden
 - Clone this repositrory in home folder of user
-- Add some variables in `/etc/environment` for pipeline commands alias, replace `$redis_host` with redis host and `$domain_name` with your project domain name
+- Add some variables in `/etc/environment` for pipeline commands alias, replace `$domain_name` with your project domain name
 ```
-# Aws Endpoints
-aws_redis="$redis_host"
-
 # Root path
 mage_root="/var/www/html/$domain_name"
 build_root="/var/www/html/build"
