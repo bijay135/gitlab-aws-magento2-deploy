@@ -1,3 +1,5 @@
 #!/bin/bash
 sudo mount -a
+sudo crontab -u root -r
+sudo crontab -u ubuntu -r
 echo "The user data script for launch configuration executed successfully"

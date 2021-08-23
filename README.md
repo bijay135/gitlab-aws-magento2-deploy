@@ -248,3 +248,4 @@ cp -a .env.dis .env.stag
 - Push the changes to relevant branch, the pipeline should trigger, run it's operations and complete if everything was setup up properly
 - Symbolic linked `view_preprocessed` in `var` will be used by `static deployment` command while modified `view_preprocessed` in `pub/index.php` will be used by `nginx`
 - Admin configuration `Enable Symlinks` does not need to be enabled, it's only needed for read operations while write operations can be done safetly with this disabled
+- Crontab for `root` and `ubuntu` user will be auto deleted on auto scaling nodes to avoid conflicting cron runs, this also effectively limits any configured cron only to golden server. It is achieved using launch configuration user data.
