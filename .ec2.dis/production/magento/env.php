@@ -147,7 +147,7 @@ return [
             ],
             'system' => [
                 'full_page_cache' => [
-                    'caching_application' => '1'
+                    'caching_application' => '2'
                 ]
             ]
         ]
@@ -169,6 +169,12 @@ return [
         'max_messages' => 10000,
         'consumers' => [
 
+        ]
+    ],
+    'http_cache_hosts' => [
+        [
+            'host' => '$varnish_host',
+            'port' => '6081'
         ]
     ]
 ];
