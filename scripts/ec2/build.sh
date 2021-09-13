@@ -72,7 +72,8 @@ if [ $NGINX == 1 ] || [ $PHP == 1 ] || [ $LOGROTATE == 1 ] || [ $MAGENTO == 1 ] 
     fi
     if [ $MAGENTO == 1 ] ; then
         echo "Magento changes found, updating"
-    	cp -f .ec2/$BRANCH_NAME/magento/* $mage_root/app/etc/
+        cp -f .ec2/$BRANCH_NAME/magento/* $mage_root/app/etc/
+        $mage_root/bin/magento app:config:import -q
         echo "Magento update complete"
     fi
     echo "Server build complete"
