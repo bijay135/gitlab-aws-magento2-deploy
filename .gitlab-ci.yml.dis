@@ -7,7 +7,6 @@ stages:
 
 variables:
     PRODUCTION_GOLDEN: ssh production_golden
-    PROUDCTION_CRON: ssh production_cron
     STAGING_GOLDEN: ssh staging_golden
 
 before_script:
@@ -31,15 +30,6 @@ deploy to golden production:
     stage: deploy:ec2
     script:
         - $PRODUCTION_GOLDEN "\$scripts_root/deploy-golden.sh"
-
-deploy to cron production:
-    only:
-        - production
-    tags:
-        - production
-    stage: deploy:ec2
-    script:
-        - $PROUDCTION_CRON "\$scripts_root/deploy-cron.sh 'production'"
 
 replicate node production:
     only:
