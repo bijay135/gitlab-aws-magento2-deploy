@@ -7,9 +7,9 @@ BRANCH_NAME=$1
 echo "Running build script"
 cd $build_root
 
-# Fetch changes
-echo -e "\nFetching changes"
-git fetch origin $BRANCH_NAME
+# Fetch changes and prepare deploy summary
+echo -e "\nFetching changes and preparing deploy summary"
+git fetch origin $BRANCH_NAME -q
 set +eo pipefail
 git diff --exit-code --quiet origin/$BRANCH_NAME -- .ec2/shared/nginx .ec2/$BRANCH_NAME/nginx ; NGINX=$?
 git diff --exit-code --quiet origin/$BRANCH_NAME -- .ec2/shared/php ; PHP=$?
@@ -26,8 +26,6 @@ else
     APPLICATION_STATE=0
     echo "0" > $scripts_root/application-state
 fi
-
-# Prepare deploy summary
 echo -e "\n###################### Deployment Summary ######################"
 echo "|---------------------- Server Section ------------------------|"
 echo -e "| \t\t Nginx                  =>    $NGINX \t\t |"
@@ -40,8 +38,8 @@ echo -e "| \t\t Patches                =>    $PATCHES \t\t |"
 echo -e "| \t\t App                    =>    $APP \t\t |"
 echo "################################################################"
 
-# Pull latest changes
-echo -e "\nPulling latest changes"
+# Reset instance to changes
+echo -e "\nResetting instance to latest changes"
 git reset --hard origin/$BRANCH_NAME
 
 # Build server changes
@@ -161,7 +159,7 @@ if [ $APPLICATION_STATE == 1 ] ; then
     cp -af app/etc/config.php.bk app/etc/config.php && rm -f app/etc/config.php.bk
     echo "Application build complete"
 else
-    echo -e "\nNo application state changes found, skipping app build"
+    echo -e "\nNo application state changes found, skipping application build"
 fi
 
 echo -e "\nBuild script complete"
