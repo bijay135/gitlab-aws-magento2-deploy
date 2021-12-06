@@ -26,17 +26,17 @@ else
     APPLICATION_STATE=0
     echo "0" > $scripts_root/application-state
 fi
-echo -e "\n###################### Deployment Summary ######################"
-echo "|---------------------- Server Section ------------------------|"
-echo -e "| \t\t Nginx                  =>    $NGINX \t\t |"
-echo -e "| \t\t Php                    =>    $PHP \t\t |"
-echo -e "| \t\t Logrotate              =>    $LOGROTATE \t\t |"
-echo -e "| \t\t Magento                =>    $MAGENTO \t\t |"
-echo "|-------------------- Application Section ---------------------|"
-echo -e "| \t\t Composer               =>    $COMPOSER \t\t |"
-echo -e "| \t\t Patches                =>    $PATCHES \t\t |"
-echo -e "| \t\t App                    =>    $APP \t\t |"
-echo "################################################################"
+echo -e "\n################### Deployment Summary ##################"
+echo "|------------------- Server Section --------------------|"
+echo -e "| \t\t Nginx     \t => \t $NGINX \t\t |"
+echo -e "| \t\t Php       \t => \t $PHP \t\t |"
+echo -e "| \t\t Logrotate \t => \t $LOGROTATE \t\t |"
+echo -e "| \t\t Magento   \t => \t $MAGENTO \t\t |"
+echo "|----------------- Application Section -----------------|"
+echo -e "| \t\t Composer  \t => \t $COMPOSER \t\t |"
+echo -e "| \t\t Patches   \t => \t $PATCHES \t\t |"
+echo -e "| \t\t App       \t => \t $APP \t\t |"
+echo "#########################################################"
 
 # Reset instance to changes
 echo -e "\nResetting instance to latest changes"
