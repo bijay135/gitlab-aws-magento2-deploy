@@ -2,22 +2,24 @@
 set -euo pipefail
 
 # Variables
-BRANCH_NAME=$1
+DEPLOY_BRANCH_NAME="deploy"
+INSTANCE_BRANCH_NAME=$1
 
 echo "Running build script"
 cd $build_root
 
 # Fetch changes and prepare deploy summary
 echo -e "\nFetching changes and preparing deploy summary"
-git fetch origin $BRANCH_NAME -q
+git fetch origin $INSTANCE_BRANCH_NAME -q
+git checkout $DEPLOY_BRANCH_NAME -q && git reset --hard origin/$INSTANCE_BRANCH_NAME -q
 set +eo pipefail
-git diff --exit-code --quiet origin/$BRANCH_NAME -- .ec2/shared/nginx .ec2/$BRANCH_NAME/nginx ; NGINX=$?
-git diff --exit-code --quiet origin/$BRANCH_NAME -- .ec2/shared/php ; PHP=$?
-git diff --exit-code --quiet origin/$BRANCH_NAME -- .ec2/shared/logrotate .ec2/$BRANCH_NAME/logrotate ; LOGROTATE=$?
-git diff --exit-code --quiet origin/$BRANCH_NAME -- .ec2/$BRANCH_NAME/magento ; MAGENTO=$?
-git diff --exit-code --quiet origin/$BRANCH_NAME -- composer.json ; COMPOSER=$?
-git diff --exit-code --quiet origin/$BRANCH_NAME -- m2-patches ; PATCHES=$?
-git diff --exit-code --quiet origin/$BRANCH_NAME -- app/code app/design app/etc/config.php ; APP=$?
+git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- .ec2/shared/nginx .ec2/$INSTANCE_BRANCH_NAME/nginx ; NGINX=$?
+git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- .ec2/shared/php ; PHP=$?
+git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- .ec2/shared/logrotate .ec2/$INSTANCE_BRANCH_NAME/logrotate ; LOGROTATE=$?
+git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- .ec2/$INSTANCE_BRANCH_NAME/magento ; MAGENTO=$?
+git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- composer.json ; COMPOSER=$?
+git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- m2-patches ; PATCHES=$?
+git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- app/code app/design app/etc/config.php ; APP=$?
 set -eo pipefail
 if [ $COMPOSER == 1 ] || [ $PATCHES == 1 ] || [ $APP == 1 ] ; then
     APPLICATION_STATE=1
@@ -38,10 +40,6 @@ echo -e "| \t\t Patches   \t => \t $PATCHES \t\t |"
 echo -e "| \t\t App       \t => \t $APP \t\t |"
 echo "#########################################################"
 
-# Reset instance to changes
-echo -e "\nResetting instance to latest changes"
-git reset --hard origin/$BRANCH_NAME
-
 # Build server changes
 if [ $NGINX == 1 ] || [ $PHP == 1 ] || [ $LOGROTATE == 1 ] || [ $MAGENTO == 1 ] ; then
     echo -e "\nServer state changes found, starting server build"
@@ -49,7 +47,7 @@ if [ $NGINX == 1 ] || [ $PHP == 1 ] || [ $LOGROTATE == 1 ] || [ $MAGENTO == 1 ] 
     	echo "Nginx changes found, updating"
         sudo cp -f .ec2/shared/nginx/nginx.conf /etc/nginx/
         sudo cp -f .ec2/shared/nginx/magento.sample /etc/nginx/conf.d/
-    	sudo cp -f .ec2/$BRANCH_NAME/nginx/* /etc/nginx/conf.d/
+        sudo cp -f .ec2/$INSTANCE_BRANCH_NAME/nginx/* /etc/nginx/conf.d/
     	sudo nginx -t
     	sudo systemctl restart nginx
     	echo "Nginx update complete"
@@ -65,12 +63,12 @@ if [ $NGINX == 1 ] || [ $PHP == 1 ] || [ $LOGROTATE == 1 ] || [ $MAGENTO == 1 ] 
     if [ $LOGROTATE == 1 ] ; then
         echo "Logrotate changes found, updating"
     	sudo cp -f .ec2/shared/logrotate/* /etc/logrotate.d/
-    	sudo cp -f .ec2/$BRANCH_NAME/logrotate/* /etc/logrotate.d/
+        sudo cp -f .ec2/$INSTANCE_BRANCH_NAME/logrotate/* /etc/logrotate.d/
     	echo "Logrotate update complete"
     fi
     if [ $MAGENTO == 1 ] ; then
         echo "Magento changes found, updating"
-        cp -f .ec2/$BRANCH_NAME/magento/* $mage_root/app/etc/
+        cp -f .ec2/$INSTANCE_BRANCH_NAME/magento/* $mage_root/app/etc/
         $mage_root/bin/magento app:config:import -q
         echo "Magento update complete"
     fi
@@ -161,5 +159,9 @@ if [ $APPLICATION_STATE == 1 ] ; then
 else
     echo -e "\nNo application state changes found, skipping application build"
 fi
+
+# Reset instance to changes
+echo -e "\nResetting instance to latest changes"
+git checkout $INSTANCE_BRANCH_NAME -q && git reset --hard $DEPLOY_BRANCH_NAME
 
 echo -e "\nBuild script complete"

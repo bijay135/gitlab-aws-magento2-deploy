@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # Variables
-BRANCH_NAME=$1
-if [ $BRANCH_NAME == "production" ] ; then
+INSTANCE_BRANCH_NAME=$1
+if [ $INSTANCE_BRANCH_NAME == "production" ] ; then
     source $scripts_root/.env.prod
-elif [ $BRANCH_NAME == "staging" ] ; then
+elif [ $INSTANCE_BRANCH_NAME == "staging" ] ; then
     source $scripts_root/.env.stag
 fi
 APPLICATION_STATE=$(cat $scripts_root/application-state)
