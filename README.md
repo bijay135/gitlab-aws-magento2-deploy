@@ -126,7 +126,8 @@ cp -a .env.dis .env.stag
 - Follow steps below to configure [mage/build root and ssh](#configure-magebuild-root-and-ssh) and [this repository](#configure-this-repository-for-golden)
 
 ## Configure mage/build root and ssh
-- Checkout the specefic branch `production`/`staging` from the repository created for cloud in your `mage root`
+- Checkout the specefic instance branch `production`/`staging` from the repository created for cloud in your `mage root`
+- Create an additional local only deploy branch named `deploy` in your `mage root` which will allow build stage to be retryed with changes
 - Create a ssh `config` file in `~/.ssh` and add these entry, replace `$gitlab_domain` with your own, `$host_ip` with it's ip and `$key_name` with key name
 ```
 Host $gitlab_domain
