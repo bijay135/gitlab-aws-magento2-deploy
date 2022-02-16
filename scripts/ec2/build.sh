@@ -5,6 +5,9 @@ set -euo pipefail
 DEPLOY_BRANCH_NAME="deploy"
 INSTANCE_BRANCH_NAME=$1
 FORCE_APPLICATION_BUILD=$2
+CURRENT_DATE=$(date +%s)
+THIRTY_DAYS_AGO_DATE=$(date -d 'now - 30 days' +%s)
+COMPOSED_UPDATED=$(cat $scripts_root/composer-updated)
 
 echo "Running build script"
 cd $build_root
@@ -84,8 +87,13 @@ fi
 if [ $COMPOSER == 1 ] ; then
     echo -e "\nComposer changes found, updating new packages"
     composer update -n
+    echo $CURRENT_DATE > $scripts_root/composer-updated
+elif (( $THIRTY_DAYS_AGO_DATE >= $COMPOSER_UPDATED )) ; then
+    echo -e "\nComposer not updated in last 30 days, updating new packages"
+    composer update -n
+    echo $CURRENT_DATE > $scripts_root/composer-updated
 else
-    echo -e "\nNo composer changes found, skipping"
+    echo -e "\nNo composer changes found and composer updated in last 30 days, skipping"
 fi
 
 # Build patches
