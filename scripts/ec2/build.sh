@@ -7,6 +7,9 @@ INSTANCE_BRANCH_NAME=$1
 FORCE_APPLICATION_BUILD=$2
 CURRENT_DATE=$(date +%s)
 THIRTY_DAYS_AGO_DATE=$(date -d 'now - 30 days' +%s)
+if ! $scripts_root/composer-updated > /dev/null 2>&1 ; then
+    touch $scripts_root/composer-updated
+fi
 COMPOSED_UPDATED=$(cat $scripts_root/composer-updated)
 
 echo "Running build script"
