@@ -4,6 +4,7 @@ set -euo pipefail
 # Variables
 DEPLOY_BRANCH_NAME="deploy"
 INSTANCE_BRANCH_NAME=$1
+FORCE_APPLICATION_BUILD=$2
 
 echo "Running build script"
 cd $build_root
@@ -21,7 +22,7 @@ git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- composer.json ; COMPOSER=$
 git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- m2-patches ; PATCHES=$?
 git diff --exit-code --quiet $INSTANCE_BRANCH_NAME -- app/code app/design app/etc/config.php ; APP=$?
 set -eo pipefail
-if [ $COMPOSER == 1 ] || [ $PATCHES == 1 ] || [ $APP == 1 ] ; then
+if [ $COMPOSER == 1 ] || [ $PATCHES == 1 ] || [ $APP == 1 ] || [ $FORCE_APPLICATION_BUILD == 1 ] ; then
     APPLICATION_STATE=1
     echo "1" > $scripts_root/application-state
 else
@@ -29,6 +30,8 @@ else
     echo "0" > $scripts_root/application-state
 fi
 echo -e "\n################### Deployment Summary ##################"
+echo "|------------------ Pipeline Section -------------------|"
+echo -e "| \t\t Force Application Build => $FORCE_APPLICATION_BUILD \t\t |"
 echo "|------------------- Server Section --------------------|"
 echo -e "| \t\t Nginx     \t => \t $NGINX \t\t |"
 echo -e "| \t\t Php       \t => \t $PHP \t\t |"

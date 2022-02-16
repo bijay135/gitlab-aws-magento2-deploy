@@ -8,6 +8,7 @@ stages:
 variables:
     PRODUCTION_GOLDEN: ssh production_golden
     STAGING_GOLDEN: ssh staging_golden
+    FORCE_APPLICATION_BUILD: 0
 
 before_script:
     - $scripts_root/connect-vpn.sh
@@ -20,7 +21,7 @@ build changes production:
         - production
     stage: build
     script:
-        - $PRODUCTION_GOLDEN "\$scripts_root/build.sh 'production'"
+        - $PRODUCTION_GOLDEN "\$scripts_root/build.sh 'production' $FORCE_APPLICATION_BUILD"
 
 deploy to golden production:
     only:
@@ -68,7 +69,7 @@ build changes staging:
         - staging
     stage: build
     script:
-        - $STAGING_GOLDEN "\$scripts_root/build.sh 'staging'"
+        - $STAGING_GOLDEN "\$scripts_root/build.sh 'staging' $FORCE_APPLICATION_BUILD"
 
 deploy to golden staging:
     only:
