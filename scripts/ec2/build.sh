@@ -7,10 +7,9 @@ INSTANCE_BRANCH_NAME=$1
 FORCE_APPLICATION_BUILD=$2
 CURRENT_DATE=$(date +%s)
 THIRTY_DAYS_AGO_DATE=$(date -d 'now - 30 days' +%s)
-if ! $scripts_root/composer-updated > /dev/null 2>&1 ; then
-    touch $scripts_root/composer-updated
+if ! COMPOSER_UPDATED=$(cat $scripts_root/composer-updated) ; then
+    echo $CURRENT_DATE > $scripts_root/composer-updated
 fi
-COMPOSED_UPDATED=$(cat $scripts_root/composer-updated)
 
 echo "Running build script"
 cd $build_root
@@ -35,19 +34,19 @@ else
     APPLICATION_STATE=0
     echo "0" > $scripts_root/application-state
 fi
-echo -e "\n################### Deployment Summary ##################"
-echo "|------------------ Pipeline Section -------------------|"
-echo -e "| \t\t Force Application Build => $FORCE_APPLICATION_BUILD \t\t |"
-echo "|------------------- Server Section --------------------|"
-echo -e "| \t\t Nginx     \t => \t $NGINX \t\t |"
-echo -e "| \t\t Php       \t => \t $PHP \t\t |"
-echo -e "| \t\t Logrotate \t => \t $LOGROTATE \t\t |"
-echo -e "| \t\t Magento   \t => \t $MAGENTO \t\t |"
-echo "|----------------- Application Section -----------------|"
-echo -e "| \t\t Composer  \t => \t $COMPOSER \t\t |"
-echo -e "| \t\t Patches   \t => \t $PATCHES \t\t |"
-echo -e "| \t\t App       \t => \t $APP \t\t |"
-echo "#########################################################"
+echo -e "\n########################### Deployment Summary ##########################"
+echo "|-------------------------- Pipeline Section ---------------------------|"
+echo -e "| \t\t Force Application Build \t => \t $FORCE_APPLICATION_BUILD \t\t |"
+echo "|--------------------------- Server Section ----------------------------|"
+echo -e "| \t\t Nginx     \t\t\t => \t $NGINX \t\t |"
+echo -e "| \t\t Php       \t\t\t => \t $PHP \t\t |"
+echo -e "| \t\t Logrotate \t\t\t => \t $LOGROTATE \t\t |"
+echo -e "| \t\t Magento   \t\t\t => \t $MAGENTO \t\t |"
+echo "|------------------------- Application Section -------------------------|"
+echo -e "| \t\t Composer  \t\t\t => \t $COMPOSER \t\t |"
+echo -e "| \t\t Patches   \t\t\t => \t $PATCHES \t\t |"
+echo -e "| \t\t App       \t\t\t => \t $APP \t\t |"
+echo "#########################################################################"
 
 # Build server changes
 if [ $NGINX == 1 ] || [ $PHP == 1 ] || [ $LOGROTATE == 1 ] || [ $MAGENTO == 1 ] ; then
@@ -93,6 +92,7 @@ if [ $COMPOSER == 1 ] ; then
     echo $CURRENT_DATE > $scripts_root/composer-updated
 elif (( $THIRTY_DAYS_AGO_DATE >= $COMPOSER_UPDATED )) ; then
     echo -e "\nComposer not updated in last 30 days, updating new packages"
+    $COMPOSER=1
     composer update -n
     echo $CURRENT_DATE > $scripts_root/composer-updated
 else
