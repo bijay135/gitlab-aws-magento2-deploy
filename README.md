@@ -1,10 +1,14 @@
 # Gitlab CI/CD pipeline with aws integration for magento 2 deployment
 
 # Feature highlights
+- Created with simplicity and ease of use in mind, inspied by magento cloud pipeline
 - Emphasis on zero downtime during deployment
-- Simple deploy summary for server/application section in tabular format during each deployment
+- Seperate root to build application changes without affecting mage root
+- State checking flow for optimized build of pipeline/server/application related changes
+- Simple deploy summary for pipeline/server/application section in tabular format during each deployment
 - Support to sync nginx, php, logrotate and magento env changes directly from repository to golden server
-- Seperate root to build application changes and state checking flow to skip application build when no changes
+- Composer auto update flow when last update run exceeds 30 days during deployment even without any changes
+- Patches install complete flow to auto apply, revert and delete relevant changes
 - Aws cli integration to create image, update launch configuration and start/wait for instance refresh
 
 # Important configuration information
@@ -198,3 +202,7 @@ cp -a .env.dis .env.stag
 - Push the changes to relevant branch, the pipeline should trigger, run it's operations and complete if everything was setup up properly
 - Symbolic linked `view_preprocessed` in `var` will be used by `static deployment` command while modified `view_preprocessed` in `pub/index.php` will be used by `nginx`
 - Admin configuration `Enable Symlinks` does not need to be enabled, it's only needed for read operations while write operations can be done safetly with this disabled
+- To force application build even without changes use the web ui `run pipeline` and set `FORCE_APPLICATION_BUILD` to `1` or set this variable to `1` during git push
+```
+git push origin $branch_name -o ci.variable="FORCE_APPLICATION_BUILD=1"
+```
