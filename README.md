@@ -1,9 +1,9 @@
 # Gitlab CI/CD pipeline with aws integration for magento 2 deployment
 
 # Feature highlights
-- Created with simplicity and ease of use in mind, inspied by magento cloud pipeline
+- Created with simplicity and ease of use in mind, inspired by magento cloud pipeline
 - Emphasis on zero downtime during deployment
-- Seperate root to build application changes without affecting mage root
+- Separate root to build application changes without affecting mage root
 - State checking flow for optimized build of pipeline/server/application related changes
 - Simple deploy summary for pipeline/server/application section in tabular format during each deployment
 - Support to sync nginx, php, logrotate and magento env changes directly from repository to golden server
