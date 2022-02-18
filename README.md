@@ -2,7 +2,7 @@
 
 # Feature highlights
 - Created with simplicity and ease of use in mind, inspired by magento cloud pipeline
-- Emphasis on zero downtime during deployment
+- Emphasis on zero downtime during deployment, must have at least 2 nodes for this
 - Separate root to build application changes without affecting mage root
 - State checking flow for optimized build of pipeline/server/application related changes
 - Simple deploy summary for pipeline/server/application section in tabular format during each deployment
@@ -17,6 +17,11 @@
 - Part of static `pub/static/_cache` should for now be in efs as it generates only on demand and not sharing it breaks layout
   [static cache bug](https://github.com/magento/magento2/issues/13225)
 - Crontab for `root` and `ubuntu` user will be auto deleted on auto scaling nodes to avoid conflicting cron runs, this effectively allows golden server to be also used as a dedicated cron server. It is achieved using launch configuration user data.
+- Logrotate config has `*.cfsaved` extenstion so regular cron skips it and we can define custom schedule using `root` user's `crontab` as required
+```
+# Magento log rotation
+45 20 * * * /usr/sbin/logrotate /etc/logrotate.d/magento.cfsaved -s /var/lib/logrotate/magento.status
+```
 
 # Contents overview
 1. [Project sequence diagram](#1-project-sequence-diagram)
