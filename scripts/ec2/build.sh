@@ -93,7 +93,7 @@ if [ $COMPOSER == 1 ] ; then
     echo $CURRENT_DATE > $scripts_root/composer-updated
 elif (( $THIRTY_DAYS_AGO_DATE >= $COMPOSER_UPDATED )) ; then
     echo -e "\nComposer not updated in last 30 days, updating new packages"
-    $COMPOSER=1
+    COMPOSER=1
     composer update -n
     echo $CURRENT_DATE > $scripts_root/composer-updated
 else
